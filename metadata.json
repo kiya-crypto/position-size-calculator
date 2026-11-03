@@ -1,0 +1,6 @@
+{
+  "name": "محاسبه‌گر حجم پوزیشن فارکس و ارز دیجیتال",
+  "description": "ماشین‌حساب پیشرفته و حرفه‌ای اندازه پوزیشن و لات معاملاتی برای کریپتو و فارکس با مدیریت ریسک هوشمند به زبان فارسی",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
