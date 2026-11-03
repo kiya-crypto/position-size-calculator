@@ -6,12 +6,11 @@ import {
   MarketType,
   TradeDirection,
   RiskInputMode,
+  ForexLotType,
 } from '@/types/calculator';
 import MarketSelector from './MarketSelector';
 import QuickPairs from './QuickPairs';
 import {
-  DollarSign,
-  Percent,
   Sliders,
   RotateCcw,
   AlertTriangle,
@@ -180,14 +179,62 @@ export default function CalculatorForm({
         onChangeDirection={handleDirectionChange}
       />
 
-      {/* 2. Quick Symbol Selector */}
+      {/* 2. Forex Lot Type Selector (When Forex is active) */}
+      {inputs.marketType === 'forex' && (
+        <div className="flex flex-col gap-1.5 p-3 bg-slate-950 border border-slate-800 rounded-lg">
+          <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
+            <span>واحد لات معاملاتی (Forex Lot Unit)</span>
+            <span className="text-[11px] text-slate-500">مبنای اصلی محاسبه لات</span>
+          </label>
+          <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-900 border border-slate-800 rounded-lg">
+            <button
+              type="button"
+              onClick={() => onChangeInputs({ ...inputs, forexLotType: 'standard' })}
+              className={`py-2 px-2 text-xs font-semibold rounded-md transition-all whitespace-nowrap flex items-center justify-center gap-1 ${
+                inputs.forexLotType === 'standard' || !inputs.forexLotType
+                  ? 'bg-blue-500/20 border border-blue-500/50 text-blue-300 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <span>لات استاندارد</span>
+              <span className="text-[10px] opacity-75 font-mono">(1.0)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onChangeInputs({ ...inputs, forexLotType: 'mini' })}
+              className={`py-2 px-2 text-xs font-semibold rounded-md transition-all whitespace-nowrap flex items-center justify-center gap-1 ${
+                inputs.forexLotType === 'mini'
+                  ? 'bg-blue-500/20 border border-blue-500/50 text-blue-300 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <span>مینی لات</span>
+              <span className="text-[10px] opacity-75 font-mono">(0.1)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onChangeInputs({ ...inputs, forexLotType: 'micro' })}
+              className={`py-2 px-2 text-xs font-semibold rounded-md transition-all whitespace-nowrap flex items-center justify-center gap-1 ${
+                inputs.forexLotType === 'micro'
+                  ? 'bg-blue-500/20 border border-blue-500/50 text-blue-300 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <span>میکرو لات</span>
+              <span className="text-[10px] opacity-75 font-mono">(0.01)</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Quick Symbol Selector */}
       <QuickPairs
         marketType={inputs.marketType}
         selectedSymbol={inputs.symbol}
         onSelectPair={handleSelectQuickPair}
       />
 
-      {/* 3. Account Balance & Risk Amount Row */}
+      {/* 4. Account Balance & Risk Amount Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-800/80">
         {/* Account Balance */}
         <div className="flex flex-col gap-1.5">
@@ -308,7 +355,7 @@ export default function CalculatorForm({
         </div>
       </div>
 
-      {/* 4. Symbol & Price Levels */}
+      {/* 5. Symbol & Price Levels */}
       <div className="flex flex-col gap-4 pt-2 border-t border-slate-800/80">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* Symbol */}
@@ -443,7 +490,7 @@ export default function CalculatorForm({
         </div>
       )}
 
-      {/* 5. Advanced Market Settings (Leverage for Crypto, JPY Rate for Forex) */}
+      {/* 6. Advanced Market Settings */}
       <div className="pt-2 border-t border-slate-800/80">
         <button
           type="button"
@@ -516,13 +563,13 @@ export default function CalculatorForm({
                   </span>
                 </div>
 
-                <div className="flex flex-col gap-1 justify-center bg-slate-900/50 p-2 rounded border border-slate-800/60">
+                <div className="flex flex-col gap-1 justify-center bg-slate-900/50 p-2.5 rounded border border-slate-800/60">
                   <div className="flex items-center gap-1.5 text-slate-300 font-medium">
                     <Info className="w-3.5 h-3.5 text-blue-400" />
-                    <span>اندازه قرارداد استاندارد فارکس:</span>
+                    <span>محاسبه حجم فارکس بر مبنای لات:</span>
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
-                    ۱ لات استاندارد = ۱۰۰,۰۰۰ واحد پایه ارز (برای طلا: ۱۰۰ اونس تروا).
+                  <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
+                    محاسبه مستقیماً بر مبنای لات (Lot) انجام می‌شود: ۱ لات استاندارد (1.0) | مینی لات (0.1) | میکرو لات (0.01).
                   </p>
                 </div>
               </div>
@@ -531,7 +578,7 @@ export default function CalculatorForm({
         )}
       </div>
 
-      {/* 6. Form Footer with Reset Button */}
+      {/* 7. Form Footer with Reset Button */}
       <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
         <span className="text-[11px] text-slate-500">
           محاسبات به صورت آنی و همگام با هر تغییر به‌روزرسانی می‌شوند.

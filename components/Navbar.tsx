@@ -35,12 +35,6 @@ export default function Navbar({
           >
             ماشین‌حساب
           </a>
-          <a
-            href="#visual-ladder-section"
-            className="hover:text-slate-100 transition-colors whitespace-nowrap shrink-0"
-          >
-            شبیه‌ساز بصری قیمت
-          </a>
         </nav>
 
         {/* Zone 3: Primary actions */}

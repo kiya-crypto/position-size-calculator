@@ -40,7 +40,9 @@ export default function ResultCard({
     if (inputs.marketType === 'crypto') {
       positionFormatted = `${formatFinancialNumber(result.positionSizeCoins, 4, usePersianDigits)} ${inputs.symbol.split('/')[0] || 'واحد'}`;
     } else {
-      positionFormatted = `${formatFinancialNumber(result.lotSizeStandard, 2, usePersianDigits)} لات استاندارد`;
+      const lotTypeName = result.lotTypeNameFa || 'لات استاندارد';
+      const lotVal = result.lotSizeSelected ?? result.lotSizeStandard;
+      positionFormatted = `${formatFinancialNumber(lotVal, 2, usePersianDigits)} ${lotTypeName}`;
     }
 
     const text = generateTradeSummaryText({
@@ -64,7 +66,6 @@ export default function ResultCard({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -85,17 +86,41 @@ export default function ResultCard({
           </h3>
           <p className="text-xs text-slate-400 leading-relaxed">
             {result.errorMessage ||
-              'برای محاسبه دقیق حجم مجاز معامله، مقادیر موجودی حساب، ریسک، قیمت ورود و حد ضرر را مشخص کنید.'}
+              'برای محاسبه دقیق حجم مجاز معامله بر حسب لات، مقادیر موجودی حساب، ریسک، قیمت ورود و حد ضرر را مشخص کنید.'}
           </p>
         </div>
         <div className="text-[11px] text-slate-500 bg-slate-950 px-3 py-1.5 rounded-md border border-slate-800">
-          فرمول: حجم معامله = مبلغ ریسک ÷ فاصله تا حد ضرر
+          فرمول: حجم لات = مبلغ ریسک ÷ (تعداد پیپ × ارزش پیپ)
         </div>
       </div>
     );
   }
 
   const coinSymbol = inputs.symbol.split('/')[0] || 'واحد';
+
+  const lotDisplayValue =
+    inputs.marketType === 'crypto'
+      ? formatFinancialNumber(result.positionSizeCoins, 4, usePersianDigits)
+      : formatFinancialNumber(result.lotSizeSelected ?? result.lotSizeStandard, 2, usePersianDigits);
+
+  const lotUnitLabel =
+    inputs.marketType === 'crypto'
+      ? coinSymbol
+      : inputs.forexLotType === 'mini'
+      ? 'Mini Lot'
+      : inputs.forexLotType === 'micro'
+      ? 'Micro Lot'
+      : 'Standard Lot';
+
+  const pipValueMetricLabel =
+    inputs.marketType === 'crypto'
+      ? 'حداکثر افت حساب:'
+      : `ارزش هر پیپ (${inputs.forexLotType === 'mini' ? '1 Mini Lot' : inputs.forexLotType === 'micro' ? '1 Micro Lot' : '1 Standard Lot'}):`;
+
+  const pipValueMetricValue =
+    inputs.marketType === 'crypto'
+      ? formatUsd(result.riskAmountUsd, 2, usePersianDigits)
+      : formatUsd(result.pipValuePerSelectedLotUsd ?? result.pipValuePerStandardLotUsd, 2, usePersianDigits);
 
   return (
     <div className="bg-slate-900/90 border border-slate-800 rounded-xl overflow-hidden shadow-2xl flex flex-col">
@@ -110,7 +135,7 @@ export default function ResultCard({
           <span className="text-xs font-semibold text-slate-300">
             {inputs.marketType === 'crypto'
               ? 'نتیجه محاسبه حجم پوزیشن کریپتو'
-              : 'نتیجه محاسبه اندازه لات فارکس'}
+              : `نتیجه محاسبه حجم فارکس (${result.lotTypeNameFa || 'لات'})`}
           </span>
           <span className="text-slate-500 text-xs">·</span>
           <span className="text-xs font-mono font-medium text-slate-400">
@@ -152,24 +177,22 @@ export default function ResultCard({
           <span>
             {inputs.marketType === 'crypto'
               ? 'حجم مجاز پوزیشن (بر حسب واحد رمزارز):'
-              : 'حجم مجاز معامله (بر حسب لات استاندارد):'}
+              : `حجم مجاز معامله (بر حسب ${result.lotTypeNameFa || 'لات'}):`}
           </span>
         </div>
 
         {/* Big Highlighted Output */}
         <div className="flex items-baseline justify-center gap-2">
           <span className="text-4xl sm:text-5xl font-black font-mono-numbers tracking-tight text-white">
-            {inputs.marketType === 'crypto'
-              ? formatFinancialNumber(result.positionSizeCoins, 4, usePersianDigits)
-              : formatFinancialNumber(result.lotSizeStandard, 2, usePersianDigits)}
+            {lotDisplayValue}
           </span>
           <span className="text-base sm:text-lg font-bold text-emerald-400">
-            {inputs.marketType === 'crypto' ? coinSymbol : 'Lot'}
+            {lotUnitLabel}
           </span>
         </div>
 
-        {/* Secondary Units / Dollar Equivalent */}
-        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-slate-300">
+        {/* Secondary Units / Lot Breakdown */}
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-slate-300">
           {inputs.marketType === 'crypto' ? (
             <>
               <div className="flex items-center gap-1">
@@ -189,23 +212,41 @@ export default function ResultCard({
           ) : (
             <>
               <div className="flex items-center gap-1">
+                <span className="text-slate-500">لات استاندارد:</span>
+                <span
+                  className={`font-mono-numbers font-semibold ${
+                    inputs.forexLotType === 'standard' || !inputs.forexLotType
+                      ? 'text-blue-300 font-bold'
+                      : 'text-slate-200'
+                  }`}
+                >
+                  {formatFinancialNumber(result.lotSizeStandard, 2, usePersianDigits)}
+                </span>
+              </div>
+              <span className="text-slate-600">·</span>
+              <div className="flex items-center gap-1">
                 <span className="text-slate-500">مینی لات:</span>
-                <span className="font-mono-numbers font-semibold text-slate-200">
-                  {formatFinancialNumber(result.lotSizeMini, 1, usePersianDigits)}
+                <span
+                  className={`font-mono-numbers font-semibold ${
+                    inputs.forexLotType === 'mini'
+                      ? 'text-blue-300 font-bold'
+                      : 'text-slate-200'
+                  }`}
+                >
+                  {formatFinancialNumber(result.lotSizeMini, 2, usePersianDigits)}
                 </span>
               </div>
               <span className="text-slate-600">·</span>
               <div className="flex items-center gap-1">
                 <span className="text-slate-500">میکرو لات:</span>
-                <span className="font-mono-numbers font-semibold text-slate-200">
-                  {formatFinancialNumber(result.lotSizeMicro, 0, usePersianDigits)}
-                </span>
-              </div>
-              <span className="text-slate-600 hidden sm:inline">·</span>
-              <div className="flex items-center gap-1">
-                <span className="text-slate-500">تعداد واحد پایه:</span>
-                <span className="font-mono-numbers font-semibold text-blue-300">
-                  {formatFinancialNumber(result.totalUnits, 0, usePersianDigits)} واحد
+                <span
+                  className={`font-mono-numbers font-semibold ${
+                    inputs.forexLotType === 'micro'
+                      ? 'text-blue-300 font-bold'
+                      : 'text-slate-200'
+                  }`}
+                >
+                  {formatFinancialNumber(result.lotSizeMicro, 2, usePersianDigits)}
                 </span>
               </div>
             </>
@@ -239,18 +280,16 @@ export default function ResultCard({
           </span>
         </div>
 
-        {/* Metric 3: Pip Value or Max Loss */}
+        {/* Metric 3: Pip Value for chosen Lot */}
         <div className="p-3 bg-slate-950/80 border border-slate-800/80 rounded-lg flex flex-col gap-1">
-          <span className="text-[11px] text-slate-400">
-            {inputs.marketType === 'crypto' ? 'حداکثر افت حساب:' : 'ارزش هر پیپ (1 Lot):'}
+          <span className="text-[11px] text-slate-400 truncate">
+            {pipValueMetricLabel}
           </span>
           <span className="text-base font-bold font-mono-numbers text-slate-200">
-            {inputs.marketType === 'crypto'
-              ? formatUsd(result.riskAmountUsd, 2, usePersianDigits)
-              : formatUsd(result.pipValuePerStandardLotUsd, 2, usePersianDigits)}
+            {pipValueMetricValue}
           </span>
           <span className="text-[10px] text-slate-500">
-            {inputs.marketType === 'crypto' ? 'ثابت و کنترل‌شده' : 'تبدیل‌شده به USD'}
+            {inputs.marketType === 'crypto' ? 'ثابت و کنترل‌شده' : 'مبنای واحد لات انتخابی'}
           </span>
         </div>
 
@@ -290,7 +329,7 @@ export default function ResultCard({
           </div>
 
           <div className="text-[11px] text-emerald-400 font-medium">
-            ریسک به ریوارد عالی
+            ریسک به ریوارد مطلوب
           </div>
         </div>
       )}

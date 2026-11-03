@@ -4,7 +4,6 @@ import React, { useState, useMemo } from 'react';
 import Navbar from '@/components/Navbar';
 import CalculatorForm from '@/components/CalculatorForm';
 import ResultCard from '@/components/ResultCard';
-import VisualTradeLadder from '@/components/VisualTradeLadder';
 import {
   CalculatorInputs,
   CalculationResult,
@@ -122,7 +121,7 @@ export default function HomePage() {
         {/* Calculator Main Section: Two Columns on Desktop */}
         <section
           id="calculator-section"
-          className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"
+          className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pb-8"
         >
           {/* Left Column (Inputs Form): 7 Cols */}
           <div className="lg:col-span-7 flex flex-col gap-6">
@@ -135,7 +134,7 @@ export default function HomePage() {
             />
           </div>
 
-          {/* Right Column (Results & Visual): 5 Cols */}
+          {/* Right Column (Results): 5 Cols */}
           <div className="lg:col-span-5 flex flex-col gap-6 sticky top-20">
             <ResultCard
               inputs={inputs}
@@ -144,17 +143,6 @@ export default function HomePage() {
             />
           </div>
         </section>
-
-        {/* Visual Ladder Simulator Section */}
-        {result.isValid && (
-          <section id="visual-ladder-section" className="pt-2 pb-6">
-            <VisualTradeLadder
-              inputs={inputs}
-              result={result}
-              usePersianDigits={usePersianDigits}
-            />
-          </section>
-        )}
       </main>
 
       {/* Footer */}

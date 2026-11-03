@@ -4,6 +4,8 @@ export type TradeDirection = 'long' | 'short';
 
 export type RiskInputMode = 'usd' | 'percent';
 
+export type ForexLotType = 'standard' | 'mini' | 'micro';
+
 export interface CalculatorInputs {
   marketType: MarketType;
   tradeDirection: TradeDirection;
@@ -16,8 +18,8 @@ export interface CalculatorInputs {
   stopLossPrice: number;
   takeProfitPrice: number | null;
   leverage: number; // For crypto
-  forexLotType: 'standard' | 'mini' | 'micro';
-  customPipValueUsd?: number; // Optional override for exotic pairs
+  forexLotType: ForexLotType; // For forex: 'standard' (1.0), 'mini' (0.1), 'micro' (0.01)
+  customPipValueUsd?: number; // Optional override
   usdJpyRate?: number; // For JPY quote conversion when needed
 }
 
@@ -46,15 +48,18 @@ export interface CalculationResult {
   errorMessage?: string;
   warningMessage?: string;
   
-  // Core outputs
-  positionSizeCoins?: number; // Crypto
-  totalPositionValueUsd?: number; // Crypto
-  requiredMarginUsd?: number; // Crypto with leverage
+  // Core outputs - Crypto
+  positionSizeCoins?: number;
+  totalPositionValueUsd?: number;
+  requiredMarginUsd?: number;
   
-  lotSizeStandard?: number; // Forex
-  lotSizeMini?: number; // Forex
-  lotSizeMicro?: number; // Forex
-  totalUnits?: number; // Forex contract units
+  // Core outputs - Forex (Lot-based)
+  lotSizeSelected?: number; // Calculated size in chosen lot type
+  pipValuePerSelectedLotUsd?: number; // Pip value for 1 lot of chosen type
+  lotTypeNameFa?: string;
+  lotSizeStandard?: number; // 1.00 Lot (100k)
+  lotSizeMini?: number; // 0.10 Lot (10k)
+  lotSizeMicro?: number; // 0.01 Lot (1k)
   
   // Common risk metrics
   riskAmountUsd: number;
@@ -71,5 +76,5 @@ export interface CalculationResult {
   takeProfitDistancePips?: number;
   potentialProfitUsd?: number;
   potentialProfitPercent?: number;
-  riskRewardRatio?: number; // e.g. 2.5 means 1:2.5
+  riskRewardRatio?: number;
 }

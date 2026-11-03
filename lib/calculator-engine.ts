@@ -15,6 +15,7 @@ export function calculatePositionSize(inputs: CalculatorInputs): CalculationResu
     stopLossPrice,
     takeProfitPrice,
     leverage = 1,
+    forexLotType = 'standard',
     usdJpyRate = 154.50,
     customPipValueUsd,
   } = inputs;
@@ -166,7 +167,7 @@ export function calculatePositionSize(inputs: CalculatorInputs): CalculationResu
     };
   }
 
-  // 2. FOREX MARKET CALCULATION
+  // 2. FOREX MARKET CALCULATION (LOT-BASED)
   const pairConfig = getForexPairConfig(symbol, entryPrice);
   const pipSize = pairConfig.pipSize;
   const stopDistancePips = stopDistancePrice / pipSize;
@@ -176,11 +177,24 @@ export function calculatePositionSize(inputs: CalculatorInputs): CalculationResu
       ? customPipValueUsd
       : calculatePipValueInUsd(pairConfig, entryPrice, usdJpyRate);
 
-  // Lot Size = Risk Amount / (Pips * Pip Value per Standard Lot)
+  // Calculated Standard Lot Size = Risk Amount / (Pips * Pip Value per Standard Lot)
   const lotSizeStandard = riskAmountUsd / (stopDistancePips * pipValuePerStandardLotUsd);
   const lotSizeMini = lotSizeStandard * 10;
   const lotSizeMicro = lotSizeStandard * 100;
-  const totalUnits = lotSizeStandard * pairConfig.contractSize;
+
+  let lotSizeSelected = lotSizeStandard;
+  let pipValuePerSelectedLotUsd = pipValuePerStandardLotUsd;
+  let lotTypeNameFa = 'لات استاندارد (Standard Lot)';
+
+  if (forexLotType === 'mini') {
+    lotSizeSelected = lotSizeMini;
+    pipValuePerSelectedLotUsd = pipValuePerStandardLotUsd / 10;
+    lotTypeNameFa = 'مینی لات (Mini Lot)';
+  } else if (forexLotType === 'micro') {
+    lotSizeSelected = lotSizeMicro;
+    pipValuePerSelectedLotUsd = pipValuePerStandardLotUsd / 100;
+    lotTypeNameFa = 'میکرو لات (Micro Lot)';
+  }
 
   let takeProfitDistancePrice: number | undefined;
   let takeProfitDistancePips: number | undefined;
@@ -207,10 +221,12 @@ export function calculatePositionSize(inputs: CalculatorInputs): CalculationResu
     stopDistancePercent,
     stopDistancePips,
     pipValuePerStandardLotUsd,
+    pipValuePerSelectedLotUsd,
+    lotSizeSelected,
+    lotTypeNameFa,
     lotSizeStandard,
     lotSizeMini,
     lotSizeMicro,
-    totalUnits,
     hasTakeProfit: hasValidTakeProfit,
     takeProfitDistancePrice,
     takeProfitDistancePips,
